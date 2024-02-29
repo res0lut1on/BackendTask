@@ -10,6 +10,7 @@ namespace BackendTestTask.Services
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services
+                .AddScoped<ISecureExceptionService, SecureExceptionService>()
                 .AddScoped<INodeServices, NodeServices>();
                 
             return services;

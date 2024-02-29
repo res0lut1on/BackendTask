@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BackendTestTask.Database.Models;
+using BackendTestTask.Services.Services.Interfaces;
 
 namespace BackendTestTask.AspNetExtensions.Filters
 {
@@ -15,10 +17,11 @@ namespace BackendTestTask.AspNetExtensions.Filters
     {
         private static readonly List<int> SuccessCodes = new() { StatusCodes.Status200OK, StatusCodes.Status201Created, StatusCodes.Status204NoContent };
         private readonly ILogger<ExceptionHandlerAttribute> _logger;
-
-        public ResponseModelFilter(ILogger<ExceptionHandlerAttribute> logger)
+        private readonly ISecureExceptionService _secureExceptionService;
+        public ResponseModelFilter(ILogger<ExceptionHandlerAttribute> logger, ISecureExceptionService secureExceptionService)
         {
             _logger = logger;
+            _secureExceptionService = secureExceptionService;
         }
 
         public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
@@ -30,17 +33,17 @@ namespace BackendTestTask.AspNetExtensions.Filters
             if (context.ModelState.IsValid == false)
             {
                 var errors = context.ModelState.Values.SelectMany(v => v.Errors);
-
+                
                 var errorMessage = string.Join("; ", errors.Select(e => e.ErrorMessage));
-
+                
                 context.Result = new BadRequestObjectResult(new ExceptionResponse()
                 {
-                    Message = "Invalid request, problem -> " + errorMessage
+                    Data = new Dictionary<string, string>() { { "message", "Invalid request, problem -> " + errorMessage } }
                 });
 
-                var badRequestException = new Exception("Invalid request");
+                var badRequest = new SecureException("Invalid request");
 
-                _logger.LogError(badRequestException, "Request has failed.");
+                _logger.LogError(badRequest, "Request has failed.");
             }
             else if (SuccessCodes.Contains(statusCode) && result != null)
             {
@@ -50,13 +53,8 @@ namespace BackendTestTask.AspNetExtensions.Filters
                 {
                     context.Result = new NotFoundObjectResult(new ExceptionResponse()
                     {
-                        Message = "Searching content not found."
+                        Data = new Dictionary<string, string>() {{ "message","Searching content not found." } }
                     });
-                }
-                else if (HttpMethods.IsPost(method))
-                {
-                    var location = $"{context.HttpContext.Request.Host}/{context.Controller.GetType().Name.Replace("Controller", string.Empty)}";
-                    context.Result = new CreatedResult(location, model);
                 }
                 else
                 {

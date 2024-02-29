@@ -1,3 +1,4 @@
+using BackendTestTask.AspNetExtensions.Models;
 using BackendTestTask.Services.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +24,7 @@ namespace BackendTestTask.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
+            throw new SecureException("top e");
             _nodeServices.LogNode();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

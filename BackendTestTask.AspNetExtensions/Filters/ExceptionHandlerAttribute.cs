@@ -1,51 +1,43 @@
 ﻿using BackendTestTask.AspNetExtensions.Models;
 using BackendTestTask.Common.CustomExceptions;
+using BackendTestTask.Database.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Text;
+using BackendTestTask.Database.Models;
+using BackendTestTask.Services.Services.Interfaces;
 
 namespace BackendTestTask.AspNetExtensions.Filters
 {
     public class ExceptionHandlerAttribute : ExceptionFilterAttribute
     {
         private readonly ILogger<ExceptionHandlerAttribute> _logger;
-
-        public ExceptionHandlerAttribute(ILogger<ExceptionHandlerAttribute> logger)
+        private readonly ISecureExceptionService _secureExceptionService;
+        public ExceptionHandlerAttribute(ILogger<ExceptionHandlerAttribute> logger, ISecureExceptionService secureExceptionService)
         {
             _logger = logger;
+            _secureExceptionService = secureExceptionService;
         }
 
-        public override void OnException(ExceptionContext context)
+        public override async Task OnExceptionAsync(ExceptionContext context)
         {
             _logger.LogError(context.Exception, "Request has failed.");
-
-            var problem = new ExceptionResponse()
-            {
-                Message = context.Exception.Message
-            };
 
             var response = context.HttpContext.Response;
 
             if (!response.HasStarted)
             {
-                if (context.Exception.GetType() == typeof(NotFoundException))
-                {
-                    response.StatusCode = StatusCodes.Status404NotFound;
-                }
-                else if (context.Exception.GetType() == typeof(ManualException))
-                {
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                }
-                else
-                {
-                    response.StatusCode = StatusCodes.Status500InternalServerError;
-                }
+                var result = await _secureExceptionService.SaveLog(context);
 
-                context.Result = new JsonResult(problem);
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+                
+                context.Result = new JsonResult(result);
             }
 
-            base.OnException(context);
+            await base.OnExceptionAsync(context);
         }
     }
 }

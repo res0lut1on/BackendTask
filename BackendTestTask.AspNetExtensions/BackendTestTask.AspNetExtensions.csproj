@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BackendTestTask.Common\BackendTestTask.Common.csproj" />
     <ProjectReference Include="..\BackendTestTask.Database\BackendTestTask.Database.csproj" />
+    <ProjectReference Include="..\BackendTestTask.Services\BackendTestTask.Services.csproj" />
     <ProjectReference Include="..\BackendTestTask.UserContext\BackendTestTask.UserContext.csproj" />
   </ItemGroup>
 
