@@ -11,29 +11,60 @@ using BackendTestTask.Database.Enums;
 using BackendTestTask.Database.Models;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Http;
+using BackendTestTask.Database;
+using BackendTestTask.Services.Services.Generic.Interfaces;
 
 namespace BackendTestTask.Services.Services.Implementations
 {
     public class SecureExceptionService : ISecureExceptionService
     {
-        public async Task<ExceptionResponse> SaveLog(ExceptionContext context)
-        {
-            var exception = context.Exception;
-            var logException =  await SetExceptionFields(context, exception);
+        private readonly IRepository<BackendTestTaskContext> _repository;
 
-            // get id
+        public SecureExceptionService(IRepository<BackendTestTaskContext> repository)
+        {
+            _repository = repository;
+        }
+
+        public async Task<ExceptionResponse> SaveLog(JournalEvent entity, Dictionary<string, string> data)
+        {
+            entity.EventID = GenerateEventId();
+            await _repository.AddAsync(entity);
+
             var result = new ExceptionResponse()
             {
-                Type = exception is SecureException ? ExceptionTypes.Secure.Description() : ExceptionTypes.Exception.Description(),
-                Data = new Dictionary<string, string>(){{"message", exception.Message}}
+                Id = entity.EventID,
+                Type = ExceptionTypes.Exception.Description(),
+                Data = data
             };
 
             return result;
         }
 
-        private static async Task<ExceptionLog> SetExceptionFields(ExceptionContext context, Exception exception)
+        private static string GenerateEventId()
         {
-            var exceptionLog = new ExceptionLog(exception);
+            return new string(Guid.NewGuid().ToString().Where(char.IsDigit).ToArray());
+        }
+
+        public async Task<ExceptionResponse> SaveLog(ExceptionContext? context, Dictionary<string, string> data)
+        {
+            var exception = context.Exception;
+            var logException =  await SetExceptionFields(context, exception);
+
+            await _repository.AddAsync(logException);
+
+            var result = new ExceptionResponse()
+            {
+                Id = logException.EventID,
+                Type = exception is SecureException ? ExceptionTypes.Secure.Description() : ExceptionTypes.Exception.Description(),
+                Data = data is not null ? data : new Dictionary<string, string>(){{"message", exception.Message}}
+            };
+
+            return result;
+        }
+
+        private static async Task<JournalEvent> SetExceptionFields(ExceptionContext context, Exception exception)
+        {
+            var exceptionLog = new JournalEvent(exception);
 
             var queryParameters = context.HttpContext.Request.Query;
 
@@ -58,6 +89,8 @@ namespace BackendTestTask.Services.Services.Implementations
             }
 
             exceptionLog.BodyParameters = requestBody;
+
+            exceptionLog.EventID = GenerateEventId();
 
             return exceptionLog;
         }

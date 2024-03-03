@@ -30,11 +30,28 @@ namespace BackendTestTask.AspNetExtensions.Filters
 
             if (!response.HasStarted)
             {
-                var result = await _secureExceptionService.SaveLog(context);
+                if (context.Exception.GetType() == typeof(NotFoundException))
+                {
+                    var data = new Dictionary<string, string>() { { "message", "Searching content not found." } };
 
-                response.StatusCode = StatusCodes.Status500InternalServerError;
-                
-                context.Result = new JsonResult(result);
+                    var result = await _secureExceptionService.SaveLog(context, data);
+
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    context.Result = new JsonResult(result);
+                }
+                else if (context.Exception.GetType() == typeof(ManualException) || (context.ModelState.IsValid == false))
+                {
+                    var result = await _secureExceptionService.SaveLog(context);
+
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    context.Result = new JsonResult(result);
+                }
+                else
+                {
+                    response.StatusCode = StatusCodes.Status500InternalServerError;
+                    var result = await _secureExceptionService.SaveLog(context);
+                    context.Result = new JsonResult(result);
+                }
             }
 
             await base.OnExceptionAsync(context);

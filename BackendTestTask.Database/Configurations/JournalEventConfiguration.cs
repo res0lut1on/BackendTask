@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BackendTestTask.Services.Services.Interfaces
+namespace BackendTestTask.Database.Configurations
 {
-    public interface INodeServices
+    internal class JournalEventConfiguration
     {
-        public void LogNode();
     }
 }

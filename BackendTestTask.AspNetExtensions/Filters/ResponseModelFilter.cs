@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BackendTestTask.Database.Models;
 using BackendTestTask.Services.Services.Interfaces;
+using BackendTestTask.Services.Services.Implementations;
+using BackendTestTask.Database.Entities;
 
 namespace BackendTestTask.AspNetExtensions.Filters
 {
@@ -33,14 +35,27 @@ namespace BackendTestTask.AspNetExtensions.Filters
             if (context.ModelState.IsValid == false)
             {
                 var errors = context.ModelState.Values.SelectMany(v => v.Errors);
-                
-                var errorMessage = string.Join("; ", errors.Select(e => e.ErrorMessage));
-                
-                context.Result = new BadRequestObjectResult(new ExceptionResponse()
-                {
-                    Data = new Dictionary<string, string>() { { "message", "Invalid request, problem -> " + errorMessage } }
-                });
 
+                var errorMessage = string.Join("; ", errors.Select(e => e.ErrorMessage));
+
+                var data = new Dictionary<string, string>() { { "message", "Invalid request, problem -> " + errorMessage } };
+
+                var journalEvent = new JournalEvent
+                {
+                    TimeStamp = DateTime.UtcNow, 
+                    QueryParameters = context.HttpContext.Request.QueryString.ToString(),
+                    StackTrace = errorMessage
+                };
+                                
+                if (context.HttpContext.Request.ContentLength > 0 && context.HttpContext.Request.Body.CanSeek)
+                {
+                    context.HttpContext.Request.EnableBuffering();
+                    var bodyReader = new StreamReader(context.HttpContext.Request.Body);
+                    var bodyContent = await bodyReader.ReadToEndAsync();
+                    journalEvent.BodyParameters = bodyContent;                   
+                    context.HttpContext.Request.Body.Position = 0;
+                }
+                context.Result = new BadRequestObjectResult(await _secureExceptionService.SaveLog(journalEvent, data));
                 var badRequest = new SecureException("Invalid request");
 
                 _logger.LogError(badRequest, "Request has failed.");
@@ -49,14 +64,8 @@ namespace BackendTestTask.AspNetExtensions.Filters
             {
                 var model = result.Value;
 
-                if ((HttpMethods.IsGet(method) || HttpMethods.IsPut(method) || HttpMethods.IsPatch(method)) && model == null)
-                {
-                    context.Result = new NotFoundObjectResult(new ExceptionResponse()
-                    {
-                        Data = new Dictionary<string, string>() {{ "message","Searching content not found." } }
-                    });
-                }
-                else
+                if (!((HttpMethods.IsGet(method) || HttpMethods.IsPut(method) || HttpMethods.IsPatch(method))
+                     && model == null))
                 {
                     context.Result = new OkObjectResult(model);
                 }

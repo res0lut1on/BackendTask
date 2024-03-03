@@ -1,4 +1,5 @@
-﻿using BackendTestTask.Database.Models;
+﻿using BackendTestTask.Database.Entities;
+using BackendTestTask.Database.Models;
 using BackendTestTask.UserContext;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,10 @@ namespace BackendTestTask.Database
 {
     public class BackendTestTaskContext : BaseContext
     {
+        public DbSet<JournalEvent> JournalEvents { get; set; } = null!;
+        public DbSet<Node> Nodes { get; set; } = null!;
+        public DbSet<Tree> Trees { get; set; } = null!;
+
         public BackendTestTaskContext(DbContextOptions options) : base(options)
         { }
 

@@ -10,6 +10,7 @@ using System.Configuration;
 using BackendTestTask.Database;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 const string CorsPolicyKey = "CorsPolicy";
 
@@ -39,6 +40,10 @@ builder.Services.AddSwaggerGen(options =>
             Url = new Uri("https://test.vmarmysh.com/user/description/backend")
         }
     });
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+    options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 });
 
 
