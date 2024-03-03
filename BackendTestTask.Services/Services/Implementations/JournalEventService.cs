@@ -24,7 +24,9 @@ namespace BackendTestTask.Services.Services.Implementations
 
         public async Task<ResponseJournalEvent> GetJournalEvent(string EventId)
         {
-            var result = await _repository.Query<JournalEvent>().Where(x => x.EventID == EventId).Select(e => new ResponseJournalEvent()
+            var result = await _repository.Query<JournalEvent>()
+                .Where(x => x.EventID == EventId)
+                .Select(e => new ResponseJournalEvent()
             {
                 EventId = e.EventID,
                 CreatedAt = e.TimeStamp,
@@ -69,11 +71,5 @@ namespace BackendTestTask.Services.Services.Implementations
 
             return result;
         }
-
-        //private IQueryable<Items> MapToResponseListModel<TEntity>(IQueryable<TEntity> query, Items model)
-        //{
-        //    // Реализация маппинга для Items
-        //    throw new NotImplementedException();
-        //}
     }
 }

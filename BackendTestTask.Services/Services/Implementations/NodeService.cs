@@ -38,9 +38,15 @@ namespace BackendTestTask.Services.Services.Implementations
         {
             await ValidateRequestParams(model.NodeName, model.ParentNodeId, model.TreeName);
 
-            var parentNode = await _repository.Query<Node>().Where(n => n.Id == model.ParentNodeId).Include(n => n.Tree).FirstOrDefaultAsync();
+            var parentNode = await _repository.Query<Node>()
+                .Where(n => n.Id == model.ParentNodeId)
+                .Include(n => n.Tree)
+                .FirstOrDefaultAsync();
 
-            var treeId = await _repository.Query<Tree>().Where(tr => tr.Id == parentNode!.Tree.Id).Select(tr => tr.Id).FirstOrDefaultAsync();
+            var treeId = await _repository.Query<Tree>()
+                .Where(tr => tr.Id == parentNode!.Tree.Id)
+                .Select(tr => tr.Id)
+                .FirstOrDefaultAsync();
 
             var newNode = new Node()
             {
