@@ -1,15 +1,12 @@
-using BackendTestTask.Services;
-using System.Security.Principal;
 using BackendTestTask.AspNetExtensions.Filters;
-using BackendTestTask.Database.Entities;
-using BackendTestTask.UserContext;
-using BackendTestTask.Database.Models;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.SignalR;
-using System.Configuration;
 using BackendTestTask.Database;
+using BackendTestTask.Database.Entities;
+using BackendTestTask.Database.Models;
+using BackendTestTask.Services;
+using BackendTestTask.UserContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
 
 const string CorsPolicyKey = "CorsPolicy";
@@ -18,22 +15,13 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var services = builder.Services;
 
-var sentrySection = configuration.GetSection("Sentry");
-//var swaggerSection = configuration.GetSection(nameof(SwaggerSettings));
-//
-//var sentrySettings = sentrySection.Get<SentrySettings>();
-//var swaggerSettings = swaggerSection.Get<SwaggerSettings>();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
-
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
         Title = "BackendTestTask API",
-        Description = "An ASP.NET Core Web API for managing Node items",  //                                            !!!!
+        Description = "An ASP.NET Core Web API for managing Node items", 
         Contact = new OpenApiContact
         {
             Name = "Tasks",

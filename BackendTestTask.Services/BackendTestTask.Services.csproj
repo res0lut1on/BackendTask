@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="Mappings\" />
+    <Folder Include="Models\Tree\" />
   </ItemGroup>
 
 </Project>

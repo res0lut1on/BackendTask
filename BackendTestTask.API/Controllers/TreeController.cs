@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using BackendTestTask.Controllers;
 using BackendTestTask.Services.Services.Interfaces;
 using BackendTestTask.Services.Services.SearchInterfaces;
-using BackendTestTask.Services.Models.Tree;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Collections.Generic;
+using BackendTestTask.Services.Models.Node;
 
 namespace BackendTestTask.API.Controllers
 {
@@ -39,7 +39,7 @@ namespace BackendTestTask.API.Controllers
         /// <response code="400">Tree has missing/invalid values</response>
         /// <response code="500">Oops! Can't create your tree right now</response>
         [HttpPost("api.tree.getSingle")]
-        public async Task<ResponseTreeModel> GetOrCreateTreeModel([FromQuery] string treeName)
+        public async Task<ResponseNodeModel> GetOrCreateTreeModel([FromQuery] string treeName)
         {
             var result = await _treeService.GetTreeModel(treeName);
 
@@ -53,7 +53,7 @@ namespace BackendTestTask.API.Controllers
         /// <response code="200">List of trees has been returned</response>
         /// <response code="400">Tree search string has missing/invalid values</response>
         [HttpGet("api.tree.getRange")]
-        public async Task<List<ResponseTreeModel>> Get([FromQuery] string? treeName)
+        public async Task<List<ResponseNodeModel>> Get([FromQuery] string? treeName)
         {
             var result = await _treeService.GetResponseTreeModelAsync(treeName);
 

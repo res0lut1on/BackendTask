@@ -3,7 +3,6 @@ using BackendTestTask.Database;
 using BackendTestTask.Database.Entities;
 using BackendTestTask.Services.Models.JournalEvent;
 using BackendTestTask.Services.Models.Node;
-using BackendTestTask.Services.Models.Tree;
 using BackendTestTask.Services.Services.Generic.Interfaces;
 using BackendTestTask.Services.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +23,7 @@ namespace BackendTestTask.Services.Services.Implementations
             _repository = repository;
         }
 
-        public async Task<ResponseTreeModel> GetTreeModel(string treeName)
+        public async Task<ResponseNodeModel> GetTreeModel(string treeName)
         {
             var check = await _repository.AnyAsync<Tree>(x => x.Name.ToLower() == treeName.ToLower());
 
@@ -45,7 +44,7 @@ namespace BackendTestTask.Services.Services.Implementations
 
                 await _repository.AddAsync(newTree);
 
-                return new ResponseTreeModel
+                return new ResponseNodeModel
                 {
                     Id = newTree.Id,
                     Name = newTree.Name
@@ -62,7 +61,7 @@ namespace BackendTestTask.Services.Services.Implementations
                 throw new NotFoundException(treeName);
             }
 
-            var treeModel = new ResponseTreeModel
+            var treeModel = new ResponseNodeModel
             {
                 Id = tree.Id,
                 Name = tree.Name,
@@ -72,7 +71,7 @@ namespace BackendTestTask.Services.Services.Implementations
             return treeModel;
         }
 
-        public async Task<List<ResponseTreeModel>> GetResponseTreeModelAsync(string? treeName)
+        public async Task<List<ResponseNodeModel>> GetResponseTreeModelAsync(string? treeName)
         {
             
             var query = _repository.Query<Tree>();
@@ -81,17 +80,40 @@ namespace BackendTestTask.Services.Services.Implementations
                 .Include(t => t.Nodes)
                 .ThenInclude(n => n.ChildrenNodes)
                 .ToListAsync();
-                
-            List<ResponseTreeModel> result = trees.Select(tree => new ResponseTreeModel
+
+            List<ResponseNodeModel> responseTrees = new List<ResponseNodeModel>();
+
+            foreach (var tree in trees)
             {
-                Id = tree.Id,
-                Name = tree.Name,
-                Children = BuildNodeModels(tree.Nodes.Where(n => n.ParentNode != null).ToList())//.Where(n => n.Id == tree.Id).ToList()
-            }).ToList();
+                foreach (var node in tree.Nodes)
+                {
+                    if (node.ParentNodeId == null) 
+                    {
+                        ResponseNodeModel rootNode = ConvertToResponseNodeModel(node);
+                        responseTrees.Add(rootNode);
+                    }
+                }
+            }
 
-            return result;
+            return responseTrees;
         }
+        private ResponseNodeModel ConvertToResponseNodeModel(Node node)
+        {
+            var responseNode = new ResponseNodeModel
+            {
+                Id = node.Id,
+                Name = node.Name,
+                Children = new List<ResponseNodeModel>()
+            };
 
+            foreach (var childNode in node.ChildrenNodes)
+            {
+                ResponseNodeModel child = ConvertToResponseNodeModel(childNode);
+                responseNode.Children.Add(child);
+            }
+
+            return responseNode;
+        }
         private List<ResponseNodeModel> BuildNodeModels(ICollection<Node> nodes)
         {
             return nodes.Select(node => new ResponseNodeModel

@@ -1,5 +1,5 @@
 ﻿using BackendTestTask.Database.Entities;
-using BackendTestTask.Services.Models.Tree;
+using BackendTestTask.Services.Models.Node;
 using BackendTestTask.Services.Services.Generic.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ namespace BackendTestTask.Services.Services.Interfaces
 {
     public interface ITreeService
     {
-        Task<ResponseTreeModel> GetTreeModel(string treeName);
-        Task<List<ResponseTreeModel>> GetResponseTreeModelAsync(string? treeName);
+        Task<ResponseNodeModel> GetTreeModel(string treeName);
+        Task<List<ResponseNodeModel>> GetResponseTreeModelAsync(string? treeName);
     }
 }
