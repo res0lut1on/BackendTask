@@ -105,16 +105,19 @@ namespace BackendTestTask.Services.Services.Implementations
             await IsTreeExist(model.TreeName);
             await IsNodeExist(model.NodeId);
 
-            var node = await _repository.GetAsync<Node>(n => n.Id == model.NodeId);
+            var node = await _repository.Query<Node>()
+                .Where(n => n.Id == model.NodeId)
+                .Include(n => n.ChildrenNodes)
+                .FirstOrDefaultAsync();
 
-            var isItParentNode = node!.ChildrenNodes.Any(n => n.ChildrenNodes.Count != 0);
+            var isItParentNode = node!.ChildrenNodes.Count != 0;
 
             if (isItParentNode)
             {
                 throw new SecureException("This node cant be deleted. This node has child nodes");
             }
 
-            await _repository.Delete(node);
+            await _repository.DeleteAsync<Node>(node.Id);
         }
     }
 }
